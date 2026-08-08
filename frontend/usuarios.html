@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Inventario TI — Usuarios</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+</head>
+<body class="bg-gray-100 min-h-screen font-sans">
+
+  <!-- NAV -->
+  <nav class="bg-blue-700 text-white shadow-lg">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <i class="fa-solid fa-laptop text-2xl"></i>
+        <span class="text-xl font-bold tracking-tight">Inventario TI</span>
+      </div>
+      <div class="flex gap-4 text-sm font-medium">
+        <a href="/" class="hover:bg-blue-600 px-3 py-1.5 rounded-lg flex items-center gap-2 transition">
+          <i class="fa-solid fa-gauge-high"></i> Dashboard
+        </a>
+        <a href="/usuarios-page" class="bg-blue-900 px-3 py-1.5 rounded-lg flex items-center gap-2">
+          <i class="fa-solid fa-users"></i> Usuarios
+        </a>
+        <a href="/equipos-page" class="hover:bg-blue-600 px-3 py-1.5 rounded-lg flex items-center gap-2 transition">
+          <i class="fa-solid fa-desktop"></i> Equipos
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="max-w-7xl mx-auto px-4 py-8">
+
+    <div class="mb-8">
+      <h1 class="text-3xl font-bold text-gray-800">Gestión de Colaboradores</h1>
+      <p class="text-gray-500 mt-1">Registra y administra los usuarios del sistema</p>
+    </div>
+
+    <div class="grid lg:grid-cols-3 gap-8">
+
+      <!-- FORMULARIO -->
+      <div class="lg:col-span-1">
+        <div class="bg-white rounded-2xl shadow p-6 sticky top-6">
+          <h2 id="form-titulo" class="text-lg font-semibold text-gray-700 mb-5 flex items-center gap-2">
+            <i class="fa-solid fa-user-plus text-blue-500"></i>
+            Nuevo Colaborador
+          </h2>
+          <form id="form-usuario" class="space-y-4" novalidate>
+            <input type="hidden" id="usuario-id" value="" />
+
+            <div>
+              <label class="block text-sm text-gray-500 mb-1">Nombre completo <span class="text-red-500">*</span></label>
+              <input id="u-nombre" type="text" placeholder="Ej: María García López"
+                class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                required />
+            </div>
+            <div>
+              <label class="block text-sm text-gray-500 mb-1">Correo electrónico <span class="text-red-500">*</span></label>
+              <input id="u-correo" type="email" placeholder="correo@empresa.com"
+                class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                required />
+            </div>
+            <div>
+              <label class="block text-sm text-gray-500 mb-1">Área / Departamento <span class="text-red-500">*</span></label>
+              <input id="u-area" type="text" placeholder="Ej: Tecnología"
+                class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                required />
+            </div>
+            <div>
+              <label class="block text-sm text-gray-500 mb-1">Cargo <span class="text-red-500">*</span></label>
+              <input id="u-cargo" type="text" placeholder="Ej: Desarrollador Senior"
+                class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                required />
+            </div>
+
+            <div class="flex gap-3 pt-2">
+              <button type="submit"
+                class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg text-sm font-semibold transition flex items-center justify-center gap-2">
+                <i class="fa-solid fa-floppy-disk"></i>
+                <span id="btn-submit-txt">Guardar</span>
+              </button>
+              <button type="button" onclick="cancelarEdicion()"
+                id="btn-cancelar"
+                class="hidden px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-lg text-sm font-semibold transition">
+                Cancelar
+              </button>
+            </div>
+            <p id="msg-form" class="text-sm hidden"></p>
+          </form>
+        </div>
+      </div>
+
+      <!-- TABLA -->
+      <div class="lg:col-span-2">
+        <div class="bg-white rounded-2xl shadow">
+          <div class="p-5 border-b border-gray-100 flex items-center justify-between">
+            <h2 class="text-lg font-semibold text-gray-700">
+              Colaboradores registrados
+              <span id="count-badge" class="ml-2 text-xs bg-blue-100 text-blue-700 font-bold px-2 py-0.5 rounded-full">0</span>
+            </h2>
+            <button onclick="cargarUsuarios()" class="text-sm text-blue-600 hover:underline flex items-center gap-1">
+              <i class="fa-solid fa-arrows-rotate"></i> Actualizar
+            </button>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead class="bg-gray-50 text-gray-500 uppercase text-xs">
+                <tr>
+                  <th class="px-5 py-3 text-left">Nombre</th>
+                  <th class="px-5 py-3 text-left">Correo</th>
+                  <th class="px-5 py-3 text-left">Área</th>
+                  <th class="px-5 py-3 text-left">Cargo</th>
+                  <th class="px-5 py-3 text-left">Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-usuarios" class="divide-y divide-gray-100">
+                <tr>
+                  <td colspan="5" class="px-5 py-10 text-center text-gray-400">
+                    <i class="fa-solid fa-spinner fa-spin mr-2"></i>Cargando...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <script src="/static/js/app.js"></script>
+  <script>
+    // ── Estado de edición ────────────────────────────────────────
+    let modoEdicion = false;
+
+    // ── Cargar tabla ─────────────────────────────────────────────
+    async function cargarUsuarios() {
+      try {
+        const usuarios = await apiFetch('/api/usuarios');
+        document.getElementById('count-badge').textContent = usuarios.length;
+        const tbody = document.getElementById('tbody-usuarios');
+
+        if (!usuarios.length) {
+          tbody.innerHTML = `<tr><td colspan="5" class="px-5 py-10 text-center text-gray-400">
+            <i class="fa-solid fa-user-slash mr-2"></i>No hay colaboradores registrados
+          </td></tr>`;
+          return;
+        }
+
+        tbody.innerHTML = usuarios.map(u => `
+          <tr class="hover:bg-gray-50 transition">
+            <td class="px-5 py-3">
+              <div class="flex items-center gap-2">
+                <div class="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold">
+                  ${u.nombre.charAt(0).toUpperCase()}
+                </div>
+                <span class="font-medium text-gray-800">${u.nombre}</span>
+              </div>
+            </td>
+            <td class="px-5 py-3 text-gray-500">${u.correo}</td>
+            <td class="px-5 py-3">
+              <span class="bg-purple-100 text-purple-700 text-xs font-semibold px-2 py-0.5 rounded-full">${u.area}</span>
+            </td>
+            <td class="px-5 py-3 text-gray-600">${u.cargo}</td>
+            <td class="px-5 py-3">
+              <div class="flex gap-2">
+                <button onclick="editarUsuario(${u.id}, '${escHtml(u.nombre)}', '${escHtml(u.correo)}', '${escHtml(u.area)}', '${escHtml(u.cargo)}')"
+                  class="text-blue-500 hover:text-blue-700 text-xs px-2 py-1 bg-blue-50 hover:bg-blue-100 rounded-lg transition">
+                  <i class="fa-solid fa-pen"></i> Editar
+                </button>
+                <button onclick="eliminarUsuario(${u.id}, '${escHtml(u.nombre)}')"
+                  class="text-red-500 hover:text-red-700 text-xs px-2 py-1 bg-red-50 hover:bg-red-100 rounded-lg transition">
+                  <i class="fa-solid fa-trash"></i> Eliminar
+                </button>
+              </div>
+            </td>
+          </tr>
+        `).join('');
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    // ── Guardar (crear o actualizar) ─────────────────────────────
+    document.getElementById('form-usuario').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const id     = document.getElementById('usuario-id').value;
+      const datos  = {
+        nombre: document.getElementById('u-nombre').value.trim(),
+        correo: document.getElementById('u-correo').value.trim(),
+        area:   document.getElementById('u-area').value.trim(),
+        cargo:  document.getElementById('u-cargo').value.trim(),
+      };
+      const msg = document.getElementById('msg-form');
+
+      try {
+        if (modoEdicion && id) {
+          await apiFetch(`/api/usuarios/${id}`, 'PUT', datos);
+          mostrarMensaje(msg, '✅ Colaborador actualizado', 'text-green-600');
+        } else {
+          await apiFetch('/api/usuarios', 'POST', datos);
+          mostrarMensaje(msg, '✅ Colaborador registrado correctamente', 'text-green-600');
+        }
+        cancelarEdicion();
+        await cargarUsuarios();
+      } catch (err) {
+        mostrarMensaje(msg, `❌ ${err.message}`, 'text-red-600');
+      }
+    });
+
+    // ── Editar ───────────────────────────────────────────────────
+    function editarUsuario(id, nombre, correo, area, cargo) {
+      modoEdicion = true;
+      document.getElementById('usuario-id').value   = id;
+      document.getElementById('u-nombre').value     = nombre;
+      document.getElementById('u-correo').value     = correo;
+      document.getElementById('u-area').value       = area;
+      document.getElementById('u-cargo').value      = cargo;
+      document.getElementById('form-titulo').innerHTML =
+        '<i class="fa-solid fa-pen-to-square text-amber-500"></i> Editar Colaborador';
+      document.getElementById('btn-submit-txt').textContent = 'Actualizar';
+      document.getElementById('btn-cancelar').classList.remove('hidden');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function cancelarEdicion() {
+      modoEdicion = false;
+      document.getElementById('form-usuario').reset();
+      document.getElementById('usuario-id').value = '';
+      document.getElementById('form-titulo').innerHTML =
+        '<i class="fa-solid fa-user-plus text-blue-500"></i> Nuevo Colaborador';
+      document.getElementById('btn-submit-txt').textContent = 'Guardar';
+      document.getElementById('btn-cancelar').classList.add('hidden');
+      document.getElementById('msg-form').classList.add('hidden');
+    }
+
+    // ── Eliminar ─────────────────────────────────────────────────
+    async function eliminarUsuario(id, nombre) {
+      if (!confirm(`¿Eliminar al colaborador "${nombre}"? Esta acción no se puede deshacer.`)) return;
+      try {
+        await apiFetch(`/api/usuarios/${id}`, 'DELETE');
+        await cargarUsuarios();
+      } catch (err) {
+        alert('No se pudo eliminar: ' + err.message);
+      }
+    }
+
+    // ── Helpers ──────────────────────────────────────────────────
+    function mostrarMensaje(el, texto, cls) {
+      el.textContent = texto;
+      el.className = `text-sm ${cls}`;
+      el.classList.remove('hidden');
+      setTimeout(() => el.classList.add('hidden'), 4000);
+    }
+
+    function escHtml(str) {
+      return String(str).replace(/'/g, "\\'").replace(/"/g, '&quot;');
+    }
+
+    // ── Init ─────────────────────────────────────────────────────
+    cargarUsuarios();
+  </script>
+</body>
+</html>

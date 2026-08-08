@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Inventario TI — Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: { DEFAULT: '#2563eb', dark: '#1d4ed8' },
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-gray-100 min-h-screen font-sans">
+
+  <!-- NAV -->
+  <nav class="bg-blue-700 text-white shadow-lg">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <i class="fa-solid fa-laptop text-2xl"></i>
+        <span class="text-xl font-bold tracking-tight">Inventario TI</span>
+      </div>
+      <div class="flex gap-4 text-sm font-medium">
+        <a href="/" class="bg-blue-900 px-3 py-1.5 rounded-lg flex items-center gap-2">
+          <i class="fa-solid fa-gauge-high"></i> Dashboard
+        </a>
+        <a href="/usuarios-page" class="hover:bg-blue-600 px-3 py-1.5 rounded-lg flex items-center gap-2 transition">
+          <i class="fa-solid fa-users"></i> Usuarios
+        </a>
+        <a href="/equipos-page" class="hover:bg-blue-600 px-3 py-1.5 rounded-lg flex items-center gap-2 transition">
+          <i class="fa-solid fa-desktop"></i> Equipos
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="max-w-7xl mx-auto px-4 py-8">
+
+    <!-- TÍTULO -->
+    <div class="mb-8">
+      <h1 class="text-3xl font-bold text-gray-800">Dashboard de Inventario</h1>
+      <p class="text-gray-500 mt-1">Vista general del estado de equipos y asignaciones</p>
+    </div>
+
+    <!-- TARJETAS DE ESTADÍSTICAS -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-5 mb-10">
+      <div class="bg-white rounded-2xl shadow p-5 flex items-center gap-4">
+        <div class="bg-blue-100 text-blue-600 rounded-xl p-3 text-2xl">
+          <i class="fa-solid fa-desktop"></i>
+        </div>
+        <div>
+          <p class="text-gray-400 text-sm">Total Equipos</p>
+          <p id="stat-total" class="text-3xl font-bold text-gray-800">—</p>
+        </div>
+      </div>
+      <div class="bg-white rounded-2xl shadow p-5 flex items-center gap-4">
+        <div class="bg-green-100 text-green-600 rounded-xl p-3 text-2xl">
+          <i class="fa-solid fa-circle-check"></i>
+        </div>
+        <div>
+          <p class="text-gray-400 text-sm">Disponibles</p>
+          <p id="stat-disponibles" class="text-3xl font-bold text-gray-800">—</p>
+        </div>
+      </div>
+      <div class="bg-white rounded-2xl shadow p-5 flex items-center gap-4">
+        <div class="bg-amber-100 text-amber-600 rounded-xl p-3 text-2xl">
+          <i class="fa-solid fa-link"></i>
+        </div>
+        <div>
+          <p class="text-gray-400 text-sm">Asignados</p>
+          <p id="stat-asignados" class="text-3xl font-bold text-gray-800">—</p>
+        </div>
+      </div>
+      <div class="bg-white rounded-2xl shadow p-5 flex items-center gap-4">
+        <div class="bg-purple-100 text-purple-600 rounded-xl p-3 text-2xl">
+          <i class="fa-solid fa-users"></i>
+        </div>
+        <div>
+          <p class="text-gray-400 text-sm">Colaboradores</p>
+          <p id="stat-usuarios" class="text-3xl font-bold text-gray-800">—</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- PANEL: ASIGNAR EQUIPO -->
+    <div class="bg-white rounded-2xl shadow p-6 mb-8">
+      <h2 class="text-lg font-semibold text-gray-700 mb-4 flex items-center gap-2">
+        <i class="fa-solid fa-arrow-right-arrow-left text-blue-500"></i>
+        Asignar Equipo a Colaborador
+      </h2>
+      <form id="form-asignar" class="flex flex-wrap gap-4 items-end">
+        <div class="flex-1 min-w-[200px]">
+          <label class="block text-sm text-gray-500 mb-1">Equipo disponible</label>
+          <select id="sel-equipo" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400" required>
+            <option value="">— Selecciona un equipo —</option>
+          </select>
+        </div>
+        <div class="flex-1 min-w-[200px]">
+          <label class="block text-sm text-gray-500 mb-1">Colaborador</label>
+          <select id="sel-usuario" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400" required>
+            <option value="">— Selecciona un colaborador —</option>
+          </select>
+        </div>
+        <button type="submit"
+          class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg text-sm font-semibold transition flex items-center gap-2">
+          <i class="fa-solid fa-plus"></i> Asignar
+        </button>
+      </form>
+      <p id="msg-asignar" class="mt-3 text-sm hidden"></p>
+    </div>
+
+    <!-- TABLA DE INVENTARIO -->
+    <div class="bg-white rounded-2xl shadow">
+      <div class="p-6 border-b border-gray-100 flex items-center justify-between">
+        <h2 class="text-lg font-semibold text-gray-700 flex items-center gap-2">
+          <i class="fa-solid fa-table-list text-blue-500"></i>
+          Inventario Completo
+        </h2>
+        <button onclick="cargarInventario()"
+          class="text-sm text-blue-600 hover:underline flex items-center gap-1">
+          <i class="fa-solid fa-arrows-rotate"></i> Actualizar
+        </button>
+      </div>
+
+      <!-- Filtro -->
+      <div class="px-6 py-3 border-b border-gray-100 flex gap-3">
+        <button onclick="filtrarInventario('todos')" id="btn-todos"
+          class="filtro-btn px-3 py-1 text-sm rounded-full bg-blue-600 text-white font-medium">Todos</button>
+        <button onclick="filtrarInventario('disponible')" id="btn-disponible"
+          class="filtro-btn px-3 py-1 text-sm rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200">Disponibles</button>
+        <button onclick="filtrarInventario('asignado')" id="btn-asignado"
+          class="filtro-btn px-3 py-1 text-sm rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200">Asignados</button>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead class="bg-gray-50 text-gray-500 uppercase text-xs">
+            <tr>
+              <th class="px-6 py-3 text-left">#</th>
+              <th class="px-6 py-3 text-left">Tipo</th>
+              <th class="px-6 py-3 text-left">Marca / Modelo</th>
+              <th class="px-6 py-3 text-left">N° Serie</th>
+              <th class="px-6 py-3 text-left">Estado</th>
+              <th class="px-6 py-3 text-left">Asignación</th>
+              <th class="px-6 py-3 text-left">Colaborador</th>
+              <th class="px-6 py-3 text-left">Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-inventario" class="divide-y divide-gray-100">
+            <tr>
+              <td colspan="8" class="px-6 py-10 text-center text-gray-400">
+                <i class="fa-solid fa-spinner fa-spin mr-2"></i>Cargando inventario...
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+
+  <script src="/static/js/app.js"></script>
+  <script>
+    // ── Estado global de filtro ─────────────────────────────────
+    let inventarioData = [];
+    let filtroActual = 'todos';
+
+    // ── Cargar stats ────────────────────────────────────────────
+    async function cargarStats() {
+      try {
+        const data = await apiFetch('/api/inventario/stats');
+        document.getElementById('stat-total').textContent       = data.total_equipos;
+        document.getElementById('stat-disponibles').textContent = data.equipos_disponibles;
+        document.getElementById('stat-asignados').textContent   = data.equipos_asignados;
+        document.getElementById('stat-usuarios').textContent    = data.total_usuarios;
+      } catch (e) { console.error(e); }
+    }
+
+    // ── Cargar selects de asignación ─────────────────────────────
+    async function cargarSelects() {
+      try {
+        const [inventario, usuarios] = await Promise.all([
+          apiFetch('/api/inventario'),
+          apiFetch('/api/usuarios'),
+        ]);
+
+        const selEquipo = document.getElementById('sel-equipo');
+        selEquipo.innerHTML = '<option value="">— Selecciona un equipo —</option>';
+        inventario
+          .filter(i => i.disponible)
+          .forEach(i => {
+            const opt = document.createElement('option');
+            opt.value = i.equipo.id;
+            opt.textContent = `${i.equipo.tipo} — ${i.equipo.marca} ${i.equipo.modelo} (${i.equipo.numero_serie})`;
+            selEquipo.appendChild(opt);
+          });
+
+        const selUsuario = document.getElementById('sel-usuario');
+        selUsuario.innerHTML = '<option value="">— Selecciona un colaborador —</option>';
+        usuarios.forEach(u => {
+          const opt = document.createElement('option');
+          opt.value = u.id;
+          opt.textContent = `${u.nombre} — ${u.area}`;
+          selUsuario.appendChild(opt);
+        });
+      } catch (e) { console.error(e); }
+    }
+
+    // ── Cargar tabla inventario ──────────────────────────────────
+    async function cargarInventario() {
+      try {
+        inventarioData = await apiFetch('/api/inventario');
+        renderInventario(inventarioData);
+        await cargarStats();
+        await cargarSelects();
+      } catch (e) {
+        document.getElementById('tbody-inventario').innerHTML =
+          `<tr><td colspan="8" class="px-6 py-10 text-center text-red-400">Error al cargar datos</td></tr>`;
+      }
+    }
+
+    function filtrarInventario(filtro) {
+      filtroActual = filtro;
+      document.querySelectorAll('.filtro-btn').forEach(b => {
+        b.className = 'filtro-btn px-3 py-1 text-sm rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200';
+      });
+      document.getElementById('btn-' + filtro).className =
+        'filtro-btn px-3 py-1 text-sm rounded-full bg-blue-600 text-white font-medium';
+
+      let datos = inventarioData;
+      if (filtro === 'disponible') datos = inventarioData.filter(i => i.disponible);
+      if (filtro === 'asignado')   datos = inventarioData.filter(i => !i.disponible);
+      renderInventario(datos);
+    }
+
+    function renderInventario(datos) {
+      const tbody = document.getElementById('tbody-inventario');
+      if (!datos.length) {
+        tbody.innerHTML = `<tr><td colspan="8" class="px-6 py-10 text-center text-gray-400">No hay equipos para mostrar</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = datos.map((item, idx) => {
+        const e = item.equipo;
+        const disponible = item.disponible;
+
+        const badgeEstado = estadoBadge(e.estado);
+        const badgeAsig = disponible
+          ? `<span class="inline-flex items-center gap-1 bg-green-100 text-green-700 text-xs font-semibold px-2.5 py-1 rounded-full">
+               <i class="fa-solid fa-circle-check"></i> Disponible
+             </span>`
+          : `<span class="inline-flex items-center gap-1 bg-amber-100 text-amber-700 text-xs font-semibold px-2.5 py-1 rounded-full">
+               <i class="fa-solid fa-link"></i> Asignado
+             </span>`;
+
+        const colaborador = disponible
+          ? '<span class="text-gray-400 italic">—</span>'
+          : `<div class="font-medium text-gray-700">${item.asignado_a.nombre}</div>
+             <div class="text-xs text-gray-400">${item.asignado_a.area} · ${item.asignado_a.cargo}</div>`;
+
+        const acciones = disponible
+          ? '<span class="text-gray-300 text-xs">Sin acciones</span>'
+          : `<button onclick="devolverEquipo(${item.asignacion_id})"
+               class="bg-red-50 hover:bg-red-100 text-red-600 text-xs font-semibold px-3 py-1.5 rounded-lg transition flex items-center gap-1">
+               <i class="fa-solid fa-rotate-left"></i> Liberar
+             </button>`;
+
+        return `<tr class="hover:bg-gray-50 transition">
+          <td class="px-6 py-4 text-gray-400">${idx + 1}</td>
+          <td class="px-6 py-4">
+            <span class="flex items-center gap-2">
+              ${tipoIcono(e.tipo)}
+              <span class="font-medium text-gray-700">${e.tipo}</span>
+            </span>
+          </td>
+          <td class="px-6 py-4">
+            <div class="font-medium text-gray-800">${e.marca}</div>
+            <div class="text-xs text-gray-400">${e.modelo}</div>
+          </td>
+          <td class="px-6 py-4 font-mono text-xs text-gray-600">${e.numero_serie}</td>
+          <td class="px-6 py-4">${badgeEstado}</td>
+          <td class="px-6 py-4">${badgeAsig}</td>
+          <td class="px-6 py-4">${colaborador}</td>
+          <td class="px-6 py-4">${acciones}</td>
+        </tr>`;
+      }).join('');
+    }
+
+    // ── Asignar equipo ───────────────────────────────────────────
+    document.getElementById('form-asignar').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const equipo_id  = parseInt(document.getElementById('sel-equipo').value);
+      const usuario_id = parseInt(document.getElementById('sel-usuario').value);
+      const msg = document.getElementById('msg-asignar');
+
+      try {
+        await apiFetch('/api/asignaciones', 'POST', { equipo_id, usuario_id });
+        mostrarMensaje(msg, '✅ Equipo asignado correctamente', 'text-green-600');
+        document.getElementById('form-asignar').reset();
+        await cargarInventario();
+      } catch (err) {
+        mostrarMensaje(msg, `❌ ${err.message}`, 'text-red-600');
+      }
+    });
+
+    // ── Devolver equipo ──────────────────────────────────────────
+    async function devolverEquipo(asignacion_id) {
+      if (!confirm('¿Confirmas la devolución de este equipo?')) return;
+      try {
+        await apiFetch(`/api/asignaciones/${asignacion_id}/devolver`, 'PATCH');
+        await cargarInventario();
+      } catch (err) {
+        alert('Error al liberar el equipo: ' + err.message);
+      }
+    }
+
+    // ── Helpers visuales ─────────────────────────────────────────
+    function tipoIcono(tipo) {
+      const icons = {
+        'Laptop':  '<i class="fa-solid fa-laptop text-blue-400"></i>',
+        'Desktop': '<i class="fa-solid fa-computer text-indigo-400"></i>',
+        'Monitor': '<i class="fa-solid fa-display text-teal-400"></i>',
+      };
+      return icons[tipo] || '<i class="fa-solid fa-microchip text-gray-400"></i>';
+    }
+
+    function estadoBadge(estado) {
+      const map = {
+        'Nuevo':          'bg-blue-100 text-blue-700',
+        'Usado':          'bg-gray-100 text-gray-600',
+        'En reparación':  'bg-red-100 text-red-600',
+      };
+      const cls = map[estado] || 'bg-gray-100 text-gray-600';
+      return `<span class="text-xs font-semibold px-2.5 py-1 rounded-full ${cls}">${estado}</span>`;
+    }
+
+    function mostrarMensaje(el, texto, cls) {
+      el.textContent = texto;
+      el.className = `mt-3 text-sm ${cls}`;
+      el.classList.remove('hidden');
+      setTimeout(() => el.classList.add('hidden'), 4000);
+    }
+
+    // ── Init ─────────────────────────────────────────────────────
+    cargarInventario();
+  </script>
+</body>
+</html>
