@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Inventario TI — Actas</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <style>
+    @media print {
+      .no-print { display: none !important; }
+      body { background: white !important; }
+      .acta-preview { box-shadow: none !important; border: 1px solid #ccc !important; }
+    }
+  </style>
+</head>
+<body class="bg-gray-100 min-h-screen font-sans">
+
+  <!-- NAV -->
+  <nav class="bg-blue-700 text-white shadow-lg no-print">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <i class="fa-solid fa-laptop text-2xl"></i>
+        <span class="text-xl font-bold tracking-tight">Inventario TI</span>
+      </div>
+      <div class="flex gap-4 text-sm font-medium">
+        <a href="/" class="hover:bg-blue-600 px-3 py-1.5 rounded-lg flex items-center gap-2 transition">
+          <i class="fa-solid fa-gauge-high"></i> Dashboard
+        </a>
+        <a href="/usuarios-page" class="hover:bg-blue-600 px-3 py-1.5 rounded-lg flex items-center gap-2 transition">
+          <i class="fa-solid fa-users"></i> Usuarios
+        </a>
+        <a href="/equipos-page" class="hover:bg-blue-600 px-3 py-1.5 rounded-lg flex items-center gap-2 transition">
+          <i class="fa-solid fa-desktop"></i> Equipos
+        </a>
+        <a href="/actas-page" class="bg-blue-900 px-3 py-1.5 rounded-lg flex items-center gap-2">
+          <i class="fa-solid fa-file-signature"></i> Actas
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="max-w-7xl mx-auto px-4 py-8 no-print">
+    <div class="mb-8">
+      <h1 class="text-3xl font-bold text-gray-800">Módulo de Actas</h1>
+      <p class="text-gray-500 mt-1">Genera actas de entrega y devolución de equipos</p>
+    </div>
+
+    <!-- SELECTOR DE TIPO DE ACTA -->
+    <div class="grid md:grid-cols-3 gap-5 mb-10">
+      <button onclick="seleccionarTipo('indefinido')" id="card-indefinido"
+        class="tipo-card bg-white rounded-2xl shadow p-6 text-left hover:shadow-md transition border-2 border-transparent hover:border-blue-400 focus:outline-none">
+        <div class="bg-blue-100 text-blue-600 rounded-xl w-12 h-12 flex items-center justify-center text-xl mb-4">
+          <i class="fa-solid fa-file-contract"></i>
+        </div>
+        <h3 class="font-bold text-gray-800 text-base mb-1">Acta de Entrega</h3>
+        <p class="text-sm text-gray-500">Contrato a Término <span class="font-semibold text-blue-600">Indefinido</span></p>
+      </button>
+
+      <button onclick="seleccionarTipo('definido')" id="card-definido"
+        class="tipo-card bg-white rounded-2xl shadow p-6 text-left hover:shadow-md transition border-2 border-transparent hover:border-green-400 focus:outline-none">
+        <div class="bg-green-100 text-green-600 rounded-xl w-12 h-12 flex items-center justify-center text-xl mb-4">
+          <i class="fa-solid fa-file-circle-check"></i>
+        </div>
+        <h3 class="font-bold text-gray-800 text-base mb-1">Acta de Entrega</h3>
+        <p class="text-sm text-gray-500">Contrato a Término <span class="font-semibold text-green-600">Definido</span></p>
+      </button>
+
+      <button onclick="seleccionarTipo('devolucion')" id="card-devolucion"
+        class="tipo-card bg-white rounded-2xl shadow p-6 text-left hover:shadow-md transition border-2 border-transparent hover:border-red-400 focus:outline-none">
+        <div class="bg-red-100 text-red-600 rounded-xl w-12 h-12 flex items-center justify-center text-xl mb-4">
+          <i class="fa-solid fa-file-arrow-up"></i>
+        </div>
+        <h3 class="font-bold text-gray-800 text-base mb-1">Acta de Devolución</h3>
+        <p class="text-sm text-gray-500">Devolución de equipo asignado</p>
+      </button>
+    </div>
+
+    <!-- FORMULARIO -->
+    <div id="panel-formulario" class="hidden bg-white rounded-2xl shadow p-6 mb-8">
+      <h2 id="form-titulo-acta" class="text-lg font-semibold text-gray-700 mb-5 flex items-center gap-2"></h2>
+
+      <div class="grid md:grid-cols-2 gap-5">
+
+        <!-- Selector de asignación -->
+        <div id="bloque-asignacion">
+          <label class="block text-sm text-gray-500 mb-1">Asignación / Colaborador <span class="text-red-500">*</span></label>
+          <select id="sel-asignacion" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+            onchange="autocompletar()">
+            <option value="">— Selecciona una asignación —</option>
+          </select>
+        </div>
+
+        <!-- Fecha de contrato fin (solo contrato definido) -->
+        <div id="bloque-fecha-fin" class="hidden">
+          <label class="block text-sm text-gray-500 mb-1">Fecha fin de contrato <span class="text-red-500">*</span></label>
+          <input id="fecha-fin" type="date" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400" />
+        </div>
+
+        <!-- Observaciones -->
+        <div class="md:col-span-2">
+          <label class="block text-sm text-gray-500 mb-1">Observaciones del estado del equipo</label>
+          <textarea id="observaciones" rows="2" placeholder="Ej: Equipo en buen estado, sin rayones visibles..."
+            class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none"></textarea>
+        </div>
+
+        <!-- Lugar -->
+        <div>
+          <label class="block text-sm text-gray-500 mb-1">Ciudad / Lugar</label>
+          <input id="ciudad" type="text" placeholder="Ej: Bogotá D.C." value="Bogotá D.C."
+            class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400" />
+        </div>
+
+        <!-- Fecha del acta -->
+        <div>
+          <label class="block text-sm text-gray-500 mb-1">Fecha del acta</label>
+          <input id="fecha-acta" type="date"
+            class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400" />
+        </div>
+      </div>
+
+      <div class="mt-5 flex gap-3">
+        <button onclick="generarActa()"
+          class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg text-sm font-semibold transition flex items-center gap-2">
+          <i class="fa-solid fa-eye"></i> Vista previa
+        </button>
+      </div>
+      <p id="msg-acta" class="mt-3 text-sm hidden"></p>
+    </div>
+  </main>
+
+  <!-- ══════════════════════════════════════════════════════
+       ÁREA DE IMPRESIÓN — visible solo al imprimir o en preview
+       ══════════════════════════════════════════════════════ -->
+  <div id="acta-imprimible" class="hidden">
+    <div class="acta-preview max-w-4xl mx-auto bg-white shadow-xl p-10 print:p-8" style="font-family: 'Times New Roman', serif;">
+
+      <!-- Encabezado -->
+      <div class="text-center mb-6 border-b-2 border-gray-800 pb-4">
+        <p class="text-xs text-gray-500 uppercase tracking-widest mb-1">Sistema de Inventario TI</p>
+        <h1 id="acta-titulo-doc" class="text-2xl font-bold text-gray-900 uppercase tracking-wide"></h1>
+        <p id="acta-subtitulo-doc" class="text-sm text-gray-600 mt-1"></p>
+      </div>
+
+      <!-- Intro -->
+      <p id="acta-intro" class="text-sm text-gray-700 leading-relaxed mb-6"></p>
+
+      <!-- Datos del colaborador -->
+      <div class="mb-5">
+        <h3 class="text-sm font-bold text-gray-800 uppercase tracking-wide border-b border-gray-300 pb-1 mb-3">
+          Datos del Colaborador
+        </h3>
+        <div class="grid grid-cols-2 gap-x-8 gap-y-2 text-sm">
+          <div><span class="font-semibold text-gray-600">Nombre completo:</span> <span id="doc-nombre" class="text-gray-900"></span></div>
+          <div><span class="font-semibold text-gray-600">Correo electrónico:</span> <span id="doc-correo" class="text-gray-900"></span></div>
+          <div><span class="font-semibold text-gray-600">Área / Departamento:</span> <span id="doc-area" class="text-gray-900"></span></div>
+          <div><span class="font-semibold text-gray-600">Cargo:</span> <span id="doc-cargo" class="text-gray-900"></span></div>
+          <div id="bloque-doc-fecha-fin" class="hidden">
+            <span class="font-semibold text-gray-600">Fecha fin de contrato:</span>
+            <span id="doc-fecha-fin" class="text-gray-900"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Datos del equipo -->
+      <div class="mb-5">
+        <h3 class="text-sm font-bold text-gray-800 uppercase tracking-wide border-b border-gray-300 pb-1 mb-3">
+          Datos del Equipo
+        </h3>
+        <div class="grid grid-cols-2 gap-x-8 gap-y-2 text-sm">
+          <div><span class="font-semibold text-gray-600">Tipo:</span> <span id="doc-tipo" class="text-gray-900"></span></div>
+          <div><span class="font-semibold text-gray-600">Marca:</span> <span id="doc-marca" class="text-gray-900"></span></div>
+          <div><span class="font-semibold text-gray-600">Modelo:</span> <span id="doc-modelo" class="text-gray-900"></span></div>
+          <div><span class="font-semibold text-gray-600">Número de serie:</span> <span id="doc-serie" class="text-gray-900 font-mono"></span></div>
+          <div><span class="font-semibold text-gray-600">Estado:</span> <span id="doc-estado" class="text-gray-900"></span></div>
+        </div>
+      </div>
+
+      <!-- Observaciones -->
+      <div class="mb-6">
+        <h3 class="text-sm font-bold text-gray-800 uppercase tracking-wide border-b border-gray-300 pb-1 mb-2">
+          Observaciones
+        </h3>
+        <p id="doc-observaciones" class="text-sm text-gray-700 min-h-[40px]"></p>
+      </div>
+
+      <!-- Cláusulas -->
+      <div id="doc-clausulas" class="mb-8 text-sm text-gray-700 leading-relaxed space-y-2"></div>
+
+      <!-- Firmas -->
+      <div class="mt-12 grid grid-cols-2 gap-16">
+        <div class="text-center">
+          <div class="border-t border-gray-600 pt-2 mt-10">
+            <p id="firma-entrega-nombre" class="font-semibold text-gray-800 text-sm"></p>
+            <p id="firma-entrega-cargo" class="text-xs text-gray-500"></p>
+          </div>
+        </div>
+        <div class="text-center">
+          <div class="border-t border-gray-600 pt-2 mt-10">
+            <p id="firma-recibe-nombre" class="font-semibold text-gray-800 text-sm"></p>
+            <p id="firma-recibe-cargo" class="text-xs text-gray-500 italic"></p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pie de página -->
+      <div class="mt-8 pt-4 border-t border-gray-200 text-center">
+        <p id="doc-lugar-fecha" class="text-xs text-gray-400"></p>
+      </div>
+    </div>
+
+    <!-- Botones de acción (no se imprimen) -->
+    <div class="no-print max-w-4xl mx-auto flex gap-3 mt-5 mb-10 px-4">
+      <button onclick="window.print()"
+        class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 transition">
+        <i class="fa-solid fa-print"></i> Imprimir / Guardar PDF
+      </button>
+      <button onclick="cerrarPrevia()"
+        class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-6 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 transition">
+        <i class="fa-solid fa-arrow-left"></i> Volver al formulario
+      </button>
+    </div>
+  </div>
+
+  <script src="/static/js/app.js"></script>
+  <script>
+    // ── Estado global ─────────────────────────────────────────────
+    let tipoActual = null;
+    let inventarioData = [];
+
+    // ── Colores por tipo ──────────────────────────────────────────
+    const CONFIG = {
+      indefinido: {
+        titulo: 'Acta de Entrega de Equipo de Cómputo',
+        subtitulo: 'Contrato a Término Indefinido',
+        color: 'blue',
+        borderColor: 'border-blue-500',
+        iconForm: '<i class="fa-solid fa-file-contract text-blue-500"></i>',
+        labelCard: 'card-indefinido',
+      },
+      definido: {
+        titulo: 'Acta de Entrega de Equipo de Cómputo',
+        subtitulo: 'Contrato a Término Definido',
+        color: 'green',
+        borderColor: 'border-green-500',
+        iconForm: '<i class="fa-solid fa-file-circle-check text-green-500"></i>',
+        labelCard: 'card-definido',
+      },
+      devolucion: {
+        titulo: 'Acta de Devolución de Equipo de Cómputo',
+        subtitulo: 'Devolución por parte del Colaborador',
+        color: 'red',
+        borderColor: 'border-red-500',
+        iconForm: '<i class="fa-solid fa-file-arrow-up text-red-500"></i>',
+        labelCard: 'card-devolucion',
+      },
+    };
+
+    // ── Seleccionar tipo de acta ──────────────────────────────────
+    async function seleccionarTipo(tipo) {
+      tipoActual = tipo;
+      const cfg = CONFIG[tipo];
+
+      // Resaltar tarjeta seleccionada
+      document.querySelectorAll('.tipo-card').forEach(c => {
+        c.className = c.className.replace(/border-(blue|green|red)-400/, 'border-transparent');
+      });
+      const borderMap = { indefinido: 'border-blue-400', definido: 'border-green-400', devolucion: 'border-red-400' };
+      const card = document.getElementById(cfg.labelCard);
+      card.className = card.className.replace('border-transparent', borderMap[tipo]);
+
+      // Configurar formulario
+      document.getElementById('form-titulo-acta').innerHTML =
+        `${cfg.iconForm} ${cfg.titulo} — <span class="font-normal text-gray-500">${cfg.subtitulo}</span>`;
+
+      // Mostrar/ocultar campo fecha fin
+      document.getElementById('bloque-fecha-fin').classList.toggle('hidden', tipo !== 'definido');
+
+      // Cargar asignaciones en el selector
+      await cargarAsignaciones(tipo);
+
+      // Fecha de hoy por defecto
+      document.getElementById('fecha-acta').value = new Date().toISOString().split('T')[0];
+
+      document.getElementById('panel-formulario').classList.remove('hidden');
+      document.getElementById('acta-imprimible').classList.add('hidden');
+      document.getElementById('msg-acta').classList.add('hidden');
+      document.getElementById('panel-formulario').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // ── Cargar asignaciones según tipo ────────────────────────────
+    async function cargarAsignaciones(tipo) {
+      try {
+        const soloActivas = tipo !== 'devolucion' ? true : true;
+        // Para entrega: equipos disponibles; para devolución: asignaciones activas
+        const sel = document.getElementById('sel-asignacion');
+        sel.innerHTML = '<option value="">— Selecciona —</option>';
+
+        if (tipo === 'devolucion') {
+          // Asignaciones activas
+          const asignaciones = await apiFetch('/api/asignaciones?solo_activas=true');
+          inventarioData = asignaciones;
+          asignaciones.forEach(a => {
+            const opt = document.createElement('option');
+            opt.value = a.id;
+            opt.dataset.tipo = 'asignacion';
+            opt.textContent = `${a.usuario?.nombre || 'N/A'} — ${a.equipo?.tipo} ${a.equipo?.marca} ${a.equipo?.modelo}`;
+            sel.appendChild(opt);
+          });
+        } else {
+          // Equipos disponibles (inventario)
+          const inv = await apiFetch('/api/inventario');
+          inventarioData = inv.filter(i => i.disponible);
+          inventarioData.forEach(i => {
+            const opt = document.createElement('option');
+            opt.value = i.equipo.id;
+            opt.dataset.tipo = 'equipo';
+            opt.textContent = `${i.equipo.tipo} — ${i.equipo.marca} ${i.equipo.modelo} (${i.equipo.numero_serie})`;
+            sel.appendChild(opt);
+          });
+        }
+      } catch (e) { console.error(e); }
+    }
+
+    // ── Autocompletar campos al elegir asignación ─────────────────
+    function autocompletar() {
+      // Solo visual; los datos reales se leen al generar
+    }
+
+    // ── Generar vista previa del acta ─────────────────────────────
+    async function generarActa() {
+      const selVal = document.getElementById('sel-asignacion').value;
+      if (!selVal) {
+        mostrarMsg('❌ Selecciona una asignación o colaborador', 'text-red-600');
+        return;
+      }
+
+      const cfg = CONFIG[tipoActual];
+      let usuario, equipo, asignacionId = null;
+
+      if (tipoActual === 'devolucion') {
+        const asig = inventarioData.find(a => a.id == selVal);
+        if (!asig) { mostrarMsg('❌ Asignación no encontrada', 'text-red-600'); return; }
+        usuario = asig.usuario;
+        equipo  = asig.equipo;
+        asignacionId = asig.id;
+      } else {
+        const item = inventarioData.find(i => i.equipo.id == selVal);
+        if (!item) { mostrarMsg('❌ Equipo no encontrado', 'text-red-600'); return; }
+        equipo  = item.equipo;
+        // Traer todos los usuarios para que elijan — usamos el select dinámico
+        usuario = null;
+        // Para entrega, necesitamos un usuario: mostrar segundo select o pedir datos
+        // Si no hay usuario ligado, buscamos en usuarios
+        try {
+          const usuarios = await apiFetch('/api/usuarios');
+          // Usar primer usuario si solo hay uno, o preguntar
+          // Implementado: se auto-llena con el usuario si la asignación ya existe
+          // Para actas de entrega se muestra un segundo select
+          await mostrarSelectUsuario(usuarios, equipo);
+          return;
+        } catch(e) { mostrarMsg('❌ Error cargando usuarios', 'text-red-600'); return; }
+      }
+
+      renderActa(usuario, equipo, asignacionId);
+    }
+
+    // ── Para entrega: mostrar selector de usuario ─────────────────
+    async function mostrarSelectUsuario(usuarios, equipo) {
+      // Agregar select de usuario si no existe
+      let contenedor = document.getElementById('bloque-usuario-extra');
+      if (!contenedor) {
+        contenedor = document.createElement('div');
+        contenedor.id = 'bloque-usuario-extra';
+        contenedor.innerHTML = `
+          <label class="block text-sm text-gray-500 mb-1">Colaborador que recibe <span class="text-red-500">*</span></label>
+          <select id="sel-usuario-acta" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400">
+            <option value="">— Selecciona colaborador —</option>
+          </select>
+          <button onclick="confirmarEntrega()" class="mt-3 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg text-sm font-semibold flex items-center gap-2">
+            <i class="fa-solid fa-eye"></i> Generar acta
+          </button>`;
+        document.querySelector('#panel-formulario .mt-5').appendChild(contenedor);
+      }
+      const sel = document.getElementById('sel-usuario-acta');
+      sel.innerHTML = '<option value="">— Selecciona colaborador —</option>';
+      usuarios.forEach(u => {
+        const opt = document.createElement('option');
+        opt.value = JSON.stringify(u);
+        opt.textContent = `${u.nombre} — ${u.area}`;
+        sel.appendChild(opt);
+      });
+      window._equipoActa = equipo;
+    }
+
+    async function confirmarEntrega() {
+      const selU = document.getElementById('sel-usuario-acta');
+      if (!selU || !selU.value) { mostrarMsg('❌ Selecciona un colaborador', 'text-red-600'); return; }
+      const usuario = JSON.parse(selU.value);
+      renderActa(usuario, window._equipoActa, null);
+    }
+
+    // ── Renderizar el acta imprimible ─────────────────────────────
+    function renderActa(usuario, equipo, asignacionId) {
+      const cfg    = CONFIG[tipoActual];
+      const ciudad = document.getElementById('ciudad').value || 'Bogotá D.C.';
+      const fechaActa = formatearFecha(document.getElementById('fecha-acta').value);
+      const obs    = document.getElementById('observaciones').value || 'Sin observaciones adicionales.';
+
+      // Encabezado
+      document.getElementById('acta-titulo-doc').textContent    = cfg.titulo.toUpperCase();
+      document.getElementById('acta-subtitulo-doc').textContent = cfg.subtitulo;
+
+      // Intro
+      const intros = {
+        indefinido: `En la ciudad de ${ciudad}, a ${fechaActa}, la empresa hace entrega formal del equipo de cómputo descrito a continuación al colaborador identificado, quien lo recibirá para el desempeño de sus funciones bajo contrato a término indefinido, comprometiéndose a su correcto uso y custodia.`,
+        definido:   `En la ciudad de ${ciudad}, a ${fechaActa}, la empresa hace entrega formal del equipo de cómputo descrito a continuación al colaborador identificado, quien lo recibirá para el desempeño de sus funciones bajo contrato a término definido, con vigencia hasta la fecha indicada, comprometiéndose a su correcto uso y custodia durante dicho período.`,
+        devolucion: `En la ciudad de ${ciudad}, a ${fechaActa}, el colaborador identificado hace entrega formal y voluntaria a la empresa del equipo de cómputo que le fue asignado, quedando constancia del estado en que es devuelto el equipo y liberando así su responsabilidad sobre el mismo.`,
+      };
+      document.getElementById('acta-intro').textContent = intros[tipoActual];
+
+      // Datos colaborador
+      document.getElementById('doc-nombre').textContent  = usuario?.nombre  || '—';
+      document.getElementById('doc-correo').textContent  = usuario?.correo  || '—';
+      document.getElementById('doc-area').textContent    = usuario?.area    || '—';
+      document.getElementById('doc-cargo').textContent   = usuario?.cargo   || '—';
+
+      // Fecha fin de contrato (solo definido)
+      if (tipoActual === 'definido') {
+        const ff = document.getElementById('fecha-fin').value;
+        document.getElementById('bloque-doc-fecha-fin').classList.remove('hidden');
+        document.getElementById('doc-fecha-fin').textContent = ff ? formatearFecha(ff) : '—';
+      } else {
+        document.getElementById('bloque-doc-fecha-fin').classList.add('hidden');
+      }
+
+      // Datos equipo
+      document.getElementById('doc-tipo').textContent    = equipo?.tipo          || '—';
+      document.getElementById('doc-marca').textContent   = equipo?.marca         || '—';
+      document.getElementById('doc-modelo').textContent  = equipo?.modelo        || '—';
+      document.getElementById('doc-serie').textContent   = equipo?.numero_serie  || '—';
+      document.getElementById('doc-estado').textContent  = equipo?.estado        || '—';
+
+      // Observaciones
+      document.getElementById('doc-observaciones').textContent = obs;
+
+      // Cláusulas
+      const clausulas = {
+        indefinido: [
+          '1. El colaborador se compromete a utilizar el equipo exclusivamente para actividades laborales autorizadas por la empresa.',
+          '2. Cualquier daño, pérdida o hurto del equipo debe ser reportado de inmediato al área de Tecnología.',
+          '3. El equipo permanecerá asignado mientras dure la relación laboral. Al finalizar el contrato, el colaborador deberá devolver el equipo en las mismas condiciones en que fue entregado.',
+          '4. No se permite la instalación de software no autorizado ni la modificación de la configuración del equipo sin previa autorización.',
+          '5. La empresa podrá revocar esta asignación en cualquier momento por razones operativas o disciplinarias.',
+        ],
+        definido: [
+          '1. El colaborador se compromete a utilizar el equipo exclusivamente para actividades laborales autorizadas durante la vigencia de su contrato.',
+          '2. Al vencimiento del contrato o antes de la fecha fin indicada, el colaborador deberá devolver el equipo en las mismas condiciones de entrega.',
+          '3. Cualquier daño, pérdida o hurto del equipo debe ser reportado de inmediato al área de Tecnología.',
+          '4. No se permite la instalación de software no autorizado ni la modificación de la configuración del equipo.',
+          '5. La empresa podrá revocar esta asignación antes del vencimiento por razones operativas o disciplinarias.',
+        ],
+        devolucion: [
+          '1. El colaborador declara devolver el equipo de manera voluntaria y en el estado descrito en las observaciones.',
+          '2. La empresa realizará una revisión técnica del equipo para verificar su estado y funcionamiento.',
+          '3. En caso de encontrarse daños no reportados previamente, se procederá conforme a las políticas internas de la empresa.',
+          '4. Con la firma de este documento, el colaborador queda liberado de la responsabilidad sobre el equipo devuelto.',
+          '5. El área de Tecnología actualizará el inventario y el estado del equipo en el sistema.',
+        ],
+      };
+      document.getElementById('doc-clausulas').innerHTML =
+        clausulas[tipoActual].map(c => `<p class="text-sm">${c}</p>`).join('');
+
+      // Firmas
+      if (tipoActual === 'devolucion') {
+        document.getElementById('firma-entrega-nombre').textContent = usuario?.nombre || 'Colaborador';
+        document.getElementById('firma-entrega-cargo').textContent  = usuario?.cargo  || 'Quien entrega';
+        document.getElementById('firma-recibe-nombre').textContent  = 'Área de Tecnología';
+        document.getElementById('firma-recibe-cargo').textContent   = 'Quien recibe el equipo';
+      } else {
+        document.getElementById('firma-entrega-nombre').textContent = 'Área de Tecnología';
+        document.getElementById('firma-entrega-cargo').textContent  = 'Quien entrega el equipo';
+        document.getElementById('firma-recibe-nombre').textContent  = usuario?.nombre || 'Colaborador';
+        document.getElementById('firma-recibe-cargo').textContent   = usuario?.cargo  || 'Quien recibe';
+      }
+
+      // Lugar y fecha
+      document.getElementById('doc-lugar-fecha').textContent =
+        `Documento generado el ${fechaActa} en ${ciudad} — Sistema de Inventario TI`;
+
+      // Mostrar área imprimible
+      document.getElementById('panel-formulario').classList.add('hidden');
+      document.querySelector('main').classList.add('hidden');
+      document.getElementById('acta-imprimible').classList.remove('hidden');
+      window.scrollTo({ top: 0 });
+    }
+
+    // ── Cerrar vista previa ───────────────────────────────────────
+    function cerrarPrevia() {
+      document.getElementById('acta-imprimible').classList.add('hidden');
+      document.querySelector('main').classList.remove('hidden');
+      document.getElementById('panel-formulario').classList.remove('hidden');
+    }
+
+    // ── Helpers ───────────────────────────────────────────────────
+    function formatearFecha(isoDate) {
+      if (!isoDate) return '—';
+      const [y, m, d] = isoDate.split('-');
+      const meses = ['enero','febrero','marzo','abril','mayo','junio',
+                     'julio','agosto','septiembre','octubre','noviembre','diciembre'];
+      return `${parseInt(d)} de ${meses[parseInt(m)-1]} de ${y}`;
+    }
+
+    function mostrarMsg(texto, cls) {
+      const el = document.getElementById('msg-acta');
+      el.textContent = texto;
+      el.className = `mt-3 text-sm ${cls}`;
+      el.classList.remove('hidden');
+      setTimeout(() => el.classList.add('hidden'), 4000);
+    }
+  </script>
+</body>
+</html>

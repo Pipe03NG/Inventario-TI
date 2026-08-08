@@ -45,6 +45,10 @@ def page_usuarios():
 def page_equipos():
     return FileResponse(os.path.join(FRONTEND_DIR, "equipos.html"))
 
+@app.get("/actas-page", response_class=FileResponse, include_in_schema=False)
+def page_actas():
+    return FileResponse(os.path.join(FRONTEND_DIR, "actas.html"))
+
 
 # ══════════════════════════════════════════════════════════════════════════════
 #  API — USUARIOS
